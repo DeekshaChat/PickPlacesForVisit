@@ -1,10 +1,11 @@
 import { useRef, useState, useEffect, useCallback } from 'react';
 import Places from './components/Places.jsx';
-import { AVAILABLE_PLACES } from './data.js';
+// import { AVAILABLE_PLACES } from './data.js';
 import Modal from './components/Modal.jsx';
 import DeleteConfirmation from './components/DeleteConfirmation.jsx';
 import logoImg from './assets/logo.png';
 import { sortPlacesByDistance } from './loc.js';
+import AvailablePlaces from './components/AvailablePlaces.jsx';
 
 const storedPickedPlaces = localStorage.getItem('pickedPlaces') ? localStorage.getItem('pickedPlaces') : [];
 const storedPlacesinJSON = storedPickedPlaces && storedPickedPlaces.length > 0 ?  JSON.parse(storedPickedPlaces): [];
@@ -26,14 +27,18 @@ function App() {
     setIsOpen(false);
   }
 
-  function handleSelectPlace(id) {
-    
+  function handleSelectPlace(place) {
     setPickedPlaces((prevPickedPlaces) => {
-      if (prevPickedPlaces.some((place) => place.id === id)) {
+      if (!prevPickedPlaces) {
+        prevPickedPlaces = [];
+      }
+      if (prevPickedPlaces.some((val) => val.id === place.id)) {
         return prevPickedPlaces;
       }
-      const place = AVAILABLE_PLACES.find((place) => place.id === id);
-      const tempPlaces = [place, ...prevPickedPlaces];
+      const pickPlace = prevPickedPlaces && prevPickedPlaces.length > 0 && prevPickedPlaces.find((val) => val.id === place.id) 
+        ? prevPickedPlaces.find((val) => val.id === place.id)
+        : place;
+      const tempPlaces = [pickPlace, ...prevPickedPlaces];
       localStorage.setItem('pickedPlaces', JSON.stringify(tempPlaces));
       return tempPlaces;
     });
@@ -50,11 +55,11 @@ function App() {
   },[]);
 
   useEffect(() => {
-    navigator.geolocation.getCurrentPosition((position) => {
-      const { latitude, longitude } = position.coords;
-      const sortedPlaces = sortPlacesByDistance(AVAILABLE_PLACES, latitude, longitude);
-      setAvailablePlaces(sortedPlaces);
-    });
+    // navigator.geolocation.getCurrentPosition((position) => {
+    //   const { latitude, longitude } = position.coords;
+    //   const sortedPlaces = sortPlacesByDistance(AVAILABLE_PLACES, latitude, longitude);
+    //   setAvailablePlaces(sortedPlaces);
+    // });
   }, []);
   
 
@@ -82,9 +87,7 @@ function App() {
           places={pickedPlaces}
           onSelectPlace={handleStartRemovePlace}
         />
-        <Places
-          title="Available Places"
-          places={availablePlaces}
+        <AvailablePlaces
           onSelectPlace={handleSelectPlace}
         />
       </main>
