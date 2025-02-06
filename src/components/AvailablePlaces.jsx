@@ -1,32 +1,25 @@
-import { useEffect, useState } from "react";
 import Places from "./Places";
 import Error from "./Error";
 import { sortPlacesByDistance } from "../loc";
+import fetchAvailablePlaces from "../Request";
+import { useFetch } from "../hooks/useFetch";
 
-export default function AvailablePlaces({ onSelectPlace }) {
-  const [places, setPlaces] = useState([]);
-  const [error, setError] = useState(null);
-
-  useEffect(() => {
-  async function fetchData() {
-    try {
-      const apiData = await fetch('http://localhost:3000/places');
-      if (apiData?.ok) {
-        const data = await apiData?.json();
-        navigator.geolocation.getCurrentPosition((position) => {
+function fetchAndSortPlaces() {
+  return new Promise(async (resolve) => {
+    const data = await fetchAvailablePlaces();
+    if (data) {
+      navigator.geolocation.getCurrentPosition((position) => {
         const { latitude, longitude } = position.coords;
         const sortedPlaces = sortPlacesByDistance(data?.places, latitude, longitude);
-        setPlaces(sortedPlaces);
+        const temp = {places: sortedPlaces};
+        resolve(temp);
       });
-      } else {
-        setError({ message: 'Something went wrong' });
-      }
-    } catch (error) {
-      setError({ message: error?.message });
-    }}
+    }
+  });
+}
 
-  fetchData();
-  }, []);
+export default function AvailablePlaces({ onSelectPlace }) {
+  const {fetchedData: places, error } = useFetch(fetchAndSortPlaces, []);
 
   if (error) {
     return <Error title={error.title} message={error.message} />

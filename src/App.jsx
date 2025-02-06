@@ -4,6 +4,9 @@ import Modal from './components/Modal.jsx';
 import DeleteConfirmation from './components/DeleteConfirmation.jsx';
 import logoImg from './assets/logo.png';
 import AvailablePlaces from './components/AvailablePlaces.jsx';
+import { fetchUserPlaces, getUserPlaces } from './Request.js';
+import Error from './components/Error.jsx';
+import { useFetch } from './hooks/useFetch.js';
 
 const storedPickedPlaces = localStorage.getItem('pickedPlaces') ? localStorage.getItem('pickedPlaces') : [];
 const storedPlacesinJSON = storedPickedPlaces && storedPickedPlaces.length > 0 ?  JSON.parse(storedPickedPlaces): [];
@@ -12,8 +15,9 @@ localStorage.setItem('pickedPlaces', JSON.stringify(storedPlacesinJSON));
 function App() {
   const modal = useRef();
   const selectedPlace = useRef();
-  const [pickedPlaces, setPickedPlaces] = useState(storedPlacesinJSON);
   const [isOpen, setIsOpen] = useState(false);
+
+  const {fetchedData: pickedPlaces, error, setFetchedData: setPickedPlaces} = useFetch(getUserPlaces, storedPlacesinJSON);
 
   function handleStartRemovePlace(place) {
     setIsOpen(true);
@@ -24,7 +28,7 @@ function App() {
     setIsOpen(false);
   }
 
-  function handleSelectPlace(place) {
+  async function handleSelectPlace(place) {
     setPickedPlaces((prevPickedPlaces) => {
       if (!prevPickedPlaces) {
         prevPickedPlaces = [];
@@ -39,12 +43,17 @@ function App() {
       localStorage.setItem('pickedPlaces', JSON.stringify(tempPlaces));
       return tempPlaces;
     });
+    try {
+      await fetchUserPlaces([place, ...pickedPlaces]);
+    } catch (error) {
+      setError({ message: 'Error in updating user places' });
+    }
   }
 
   const handleRemovePlace = useCallback(function handleRemovePlace() {
     setPickedPlaces((prevPickedPlaces) => {
      const updatedPlaces = prevPickedPlaces.filter((place) => place.id !== selectedPlace.current);
-     localStorage.setItem('pickedPlaces', JSON.stringify(updatedPlaces));
+     fetchUserPlaces(updatedPlaces);
      return updatedPlaces;
     }
     );
@@ -69,12 +78,16 @@ function App() {
         </p>
       </header>
       <main>
+        {error ? 
+        <Error message={error.message}/> 
+        : 
         <Places
           title="I'd like to visit ..."
           fallbackText={'Select the places you would like to visit below.'}
           places={pickedPlaces}
           onSelectPlace={handleStartRemovePlace}
         />
+        }
         <AvailablePlaces
           onSelectPlace={handleSelectPlace}
         />
