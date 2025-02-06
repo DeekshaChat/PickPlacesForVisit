@@ -1,10 +1,8 @@
-import { useRef, useState, useEffect, useCallback } from 'react';
+import { useRef, useState, useCallback } from 'react';
 import Places from './components/Places.jsx';
-// import { AVAILABLE_PLACES } from './data.js';
 import Modal from './components/Modal.jsx';
 import DeleteConfirmation from './components/DeleteConfirmation.jsx';
 import logoImg from './assets/logo.png';
-import { sortPlacesByDistance } from './loc.js';
 import AvailablePlaces from './components/AvailablePlaces.jsx';
 
 const storedPickedPlaces = localStorage.getItem('pickedPlaces') ? localStorage.getItem('pickedPlaces') : [];
@@ -15,12 +13,11 @@ function App() {
   const modal = useRef();
   const selectedPlace = useRef();
   const [pickedPlaces, setPickedPlaces] = useState(storedPlacesinJSON);
-  const [availablePlaces, setAvailablePlaces] = useState([]);
   const [isOpen, setIsOpen] = useState(false);
 
-  function handleStartRemovePlace(id) {
+  function handleStartRemovePlace(place) {
     setIsOpen(true);
-    selectedPlace.current = id;
+    selectedPlace.current = place.id;
   }
 
   function handleStopRemovePlace() {
@@ -53,15 +50,6 @@ function App() {
     );
     setIsOpen(false);
   },[]);
-
-  useEffect(() => {
-    // navigator.geolocation.getCurrentPosition((position) => {
-    //   const { latitude, longitude } = position.coords;
-    //   const sortedPlaces = sortPlacesByDistance(AVAILABLE_PLACES, latitude, longitude);
-    //   setAvailablePlaces(sortedPlaces);
-    // });
-  }, []);
-  
 
   return (
     <>
